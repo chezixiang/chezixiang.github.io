@@ -328,6 +328,76 @@
         .helper-text strong {
             color: var(--primary-light);
         }
+
+        .json-output-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .json-output-section h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .json-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        .copy-json-btn {
+            padding: 0.5rem 1rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        .copy-json-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .copy-json-btn.copied {
+            background: #22c55e;
+        }
+
+        .json-output {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .json-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .json-output::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        .json-output::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .json-output::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -360,7 +430,11 @@
                 <h2>📝 撰写文章</h2>
 
                 <div class="helper-text">
-                    <strong>💡 提示：</strong>填写下方表单即可发布新文章。文章会自动保存到浏览器中，支持导出备份和导入恢复。
+                    <strong>📌 GitHub静态托管提示：</strong><br>
+                    1. 在下方表单编辑文章<br>
+                    2. 文章会自动显示在右侧列表中<br>
+                    3. 将底部JSON内容复制到 <code>data/posts.json</code> 文件<br>
+                    4. 提交到GitHub即可发布
                 </div>
 
                 <form id="article-form">
@@ -406,6 +480,14 @@
                 </div>
 
                 <div id="admin-articles"></div>
+
+                <!-- JSON输出区域 -->
+                <div class="json-output-section">
+                    <h3>📋 posts.json 内容</h3>
+                    <p class="json-hint">复制下方内容到 <code>data/posts.json</code> 文件中</p>
+                    <button class="copy-json-btn" onclick="copyJson()">📋 一键复制</button>
+                    <pre id="json-output" class="json-output"></pre>
+                </div>
             </div>
         </div>
     </div>
@@ -418,19 +500,25 @@
 
     <script src="blog.js"></script>
     <script>
-        // 更新统计
+        // 更新统计和JSON输出
         document.addEventListener('DOMContentLoaded', () => {
             const updateStats = () => {
                 const total = blogManager.articles.length;
                 document.getElementById('total-articles').textContent = total;
             };
-            updateStats();
 
-            // 监听表单提交来更新统计
+            // 页面加载后导出JSON
+            setTimeout(() => {
+                exportToJson();
+                updateStats();
+            }, 100);
+
+            // 监听表单提交来更新统计和JSON
             const originalRender = renderAdminArticles;
             renderAdminArticles = function() {
                 originalRender.apply(this, arguments);
                 updateStats();
+                exportToJson();
             };
         });
     </script>

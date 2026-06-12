@@ -12,7 +12,7 @@ const BLOG_CONFIG = {
     },
     social: {
         github: "chezixiang",
-        bilibili: "@芙芙可爱吖awa",
+        bilibili: "3537114281019643",
         email: "czx20101@outlook.com",
         qq: "1876963659"
     },
@@ -27,18 +27,19 @@ const BLOG_CONFIG = {
     tags: [
         "C++", "Rust", "Python", "Java", "Web", "前端",
         "Minecraft", "原神", "星穹铁道", "明日方舟",
-        "摄影", "读书", "杂食"
-    ]
+        "摄影", "读书", "杂食", "火腿", "飞友"
+    ],
+    dataPath: "data/posts.json"
 };
 
-// 默认示例文章
+// 默认示例文章（用于首次加载或数据文件不存在时）
 const DEFAULT_ARTICLES = [
     {
         id: 1,
         title: "我的第一篇博客文章",
         category: "tech",
         tags: ["C++", "Rust"],
-        date: new Date().toISOString(),
+        date: "2024-01-15T10:30:00.000Z",
         excerpt: "欢迎来到我的博客！这是我的第一篇文章，未来我会在这里分享技术心得、生活感悟，以及作为一名业余无线电爱好者（火腿）和飞友的各种经历。",
         content: "欢迎来到我的博客！这是我的第一篇文章，未来我会在这里分享技术心得、生活感悟，以及作为一名业余无线电爱好者（火腿）和飞友的各种经历。\n\n作为一名热爱计算机的人，我平时主要使用C++、Rust和Python进行编程。如果你对这些技术感兴趣，欢迎和我交流！\n\n另外，我是一名Minecraft国际版玩家，目前主要玩1.20.1版本。如果你也是MC爱好者，可以加我好友一起玩~"
     },
@@ -47,7 +48,7 @@ const DEFAULT_ARTICLES = [
         title: "关于我为什么开始写博客",
         category: "life",
         tags: ["生活", "杂食"],
-        date: new Date(Date.now() - 86400000).toISOString(),
+        date: "2024-01-12T08:15:00.000Z",
         excerpt: "一直想找个地方记录自己的学习和成长，也想分享一些对生活的思考。博客是一个很好的选择，于是就有了这个网站。",
         content: "一直想找个地方记录自己的学习和成长，也想分享一些对生活的思考。博客是一个很好的选择，于是就有了这个网站。\n\n我是一个杂食的人，什么都感兴趣，什么都想尝试。虽然我的专业是计算机，但我对很多事情都充满好奇心。\n\n未来我会在这里分享：\n1. 技术学习和项目经验\n2. 游戏心得（Minecraft、原神、明日方舟等）\n3. 生活感悟和思考\n4. 可能还有一些摄影作品"
     },
@@ -56,62 +57,51 @@ const DEFAULT_ARTICLES = [
         title: "Minecraft 1.20.1 服务器搭建记录",
         category: "minecraft",
         tags: ["Minecraft", "Java"],
-        date: new Date(Date.now() - 172800000).toISOString(),
+        date: "2024-01-10T14:00:00.000Z",
         excerpt: "最近搭建了一个小型的Minecraft服务器，记录一下过程和一些遇到的问题。",
         content: "最近搭建了一个小型的Minecraft服务器，记录一下过程和一些遇到的问题。\n\n使用的版本是1.20.1，Paper服务端。整体来说比较顺利，但也遇到了一些小问题：\n\n1. 内存分配：建议分配4GB以上\n2. 端口转发：需要开放25565端口\n3. 插件安装：选择与版本兼容的插件\n\n欢迎喜欢MC的朋友来玩！"
+    },
+    {
+        id: 4,
+        title: "活着真好 - 心理健康随想",
+        category: "alive",
+        tags: ["生活", "杂食"],
+        date: "2024-01-08T20:30:00.000Z",
+        excerpt: "生活有时很难，但活着本身就是一件值得珍惜的事情。记录一下最近的心情和感悟。",
+        content: "生活有时很难，但活着本身就是一件值得珍惜的事情。\n\n最近情绪有些波动，想在这里记录一下。其实每个人都有自己的难处，重要的是学会接纳自己，善待自己。\n\n给自己的话：\n- 不要太苛责自己\n- 每天进步一点点就好\n- 累了就休息，没关系的\n- 你已经很棒了！\n\n希望看到这篇文章的你也能好好照顾自己。"
+    },
+    {
+        id: 5,
+        title: "业余无线电备考日记",
+        category: "ham",
+        tags: ["火腿"],
+        date: "2024-01-05T16:45:00.000Z",
+        excerpt: "正在备考业余无线电执照，记录一下学习过程和一些知识点。",
+        content: "正在备考业余无线电执照，记录一下学习过程和一些知识点。\n\n学习内容：\n1. 无线电基础知识\n2. 法律法规\n3. 操作规范\n4. 呼号规则\n\n考试时间还没确定（2026年还没组织考试...），但提前准备总是好的。\n\n期待拿到呼号的那一天！📻"
     }
 ];
 
 // 文章管理类
 class BlogManager {
     constructor() {
-        this.articles = this.loadArticles();
+        this.articles = [];
         this.currentFilter = 'all';
     }
 
-    // 从localStorage加载文章
-    loadArticles() {
-        const stored = localStorage.getItem('aquavie_blog_articles');
-        if (stored) {
-            return JSON.parse(stored);
+    // 从JSON文件加载文章
+    async loadArticles() {
+        try {
+            const response = await fetch(BLOG_CONFIG.dataPath);
+            if (response.ok) {
+                this.articles = await response.json();
+            } else {
+                throw new Error('Failed to fetch articles');
+            }
+        } catch (error) {
+            console.warn('Failed to load articles from JSON, using defaults:', error);
+            this.articles = [...DEFAULT_ARTICLES];
         }
-        // 如果没有数据，使用默认文章并保存
-        this.saveArticles(DEFAULT_ARTICLES);
-        return DEFAULT_ARTICLES;
-    }
-
-    // 保存文章到localStorage
-    saveArticles(articles) {
-        localStorage.setItem('aquavie_blog_articles', JSON.stringify(articles));
-    }
-
-    // 添加文章
-    addArticle(article) {
-        const newArticle = {
-            ...article,
-            id: Date.now(),
-            date: new Date().toISOString()
-        };
-        this.articles.unshift(newArticle);
-        this.saveArticles(this.articles);
-        return newArticle;
-    }
-
-    // 更新文章
-    updateArticle(id, updates) {
-        const index = this.articles.findIndex(a => a.id === parseInt(id));
-        if (index !== -1) {
-            this.articles[index] = { ...this.articles[index], ...updates };
-            this.saveArticles(this.articles);
-            return this.articles[index];
-        }
-        return null;
-    }
-
-    // 删除文章
-    deleteArticle(id) {
-        this.articles = this.articles.filter(a => a.id !== parseInt(id));
-        this.saveArticles(this.articles);
+        return this.articles;
     }
 
     // 获取文章
@@ -147,8 +137,9 @@ class BlogManager {
 let blogManager;
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     blogManager = new BlogManager();
+    await blogManager.loadArticles();
     initBlog();
 });
 
@@ -190,7 +181,7 @@ function renderArticles(filter = 'all') {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📝</div>
-                <p>还没有文章，去看看管理后台添加一些吧！</p>
+                <p>还没有文章</p>
             </div>
         `;
         return;
@@ -276,7 +267,6 @@ function setupFilters() {
 function filterByCategory(category) {
     blogManager.currentFilter = category;
 
-    // 更新标签样式
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.classList.remove('active');
         if (tab.textContent.includes(BLOG_CONFIG.categories.find(c => c.id === category)?.name || '全部')) {
@@ -293,11 +283,6 @@ function filterByCategory(category) {
 // 设置弹窗
 function setupModal() {
     const modal = document.getElementById('article-modal');
-    const closeBtn = document.getElementById('modal-close');
-
-    if (closeBtn) {
-        closeBtn.onclick = closeModal;
-    }
 
     if (modal) {
         modal.onclick = (e) => {
@@ -389,7 +374,6 @@ function setupAdminForm() {
     const form = document.getElementById('article-form');
     if (!form) return;
 
-    // 填充分类选项
     const categorySelect = document.getElementById('article-category');
     if (categorySelect) {
         categorySelect.innerHTML = BLOG_CONFIG.categories.map(cat =>
@@ -397,7 +381,6 @@ function setupAdminForm() {
         ).join('');
     }
 
-    // 填充标签选项
     const tagsContainer = document.getElementById('article-tags');
     if (tagsContainer) {
         tagsContainer.innerHTML = BLOG_CONFIG.tags.map(tag => `
@@ -414,6 +397,8 @@ function setupAdminForm() {
 }
 
 // 提交文章
+let editingArticleId = null;
+
 function submitArticle() {
     const title = document.getElementById('article-title').value.trim();
     const category = document.getElementById('article-category').value;
@@ -428,20 +413,32 @@ function submitArticle() {
         return;
     }
 
-    const article = { title, category, excerpt, content, tags };
-    blogManager.addArticle(article);
-
-    // 重置表单
-    document.getElementById('article-form').reset();
-
-    // 刷新列表
-    renderAdminArticles();
-
-    alert('文章发布成功！🎉');
+    if (editingArticleId !== null) {
+        updateArticleInEditor(title, category, excerpt, content, tags);
+    } else {
+        addArticleToEditor(title, category, excerpt, content, tags);
+    }
 }
 
-// 编辑文章
-let editingArticleId = null;
+function addArticleToEditor(title, category, excerpt, content, tags) {
+    const newArticle = {
+        id: Date.now(),
+        title,
+        category,
+        excerpt,
+        content,
+        tags,
+        date: new Date().toISOString()
+    };
+
+    blogManager.articles.unshift(newArticle);
+    exportToJson();
+
+    document.getElementById('article-form').reset();
+    renderAdminArticles();
+
+    alert('文章已添加！\n\n接下来：\n1. 将生成的JSON内容复制到 data/posts.json 文件中\n2. 提交到GitHub即可发布');
+}
 
 function editArticle(id) {
     const article = blogManager.getArticle(id);
@@ -454,23 +451,15 @@ function editArticle(id) {
     document.getElementById('article-excerpt').value = article.excerpt;
     document.getElementById('article-content').value = article.content;
 
-    // 设置标签
     document.querySelectorAll('input[name="tags"]').forEach(cb => {
         cb.checked = article.tags.includes(cb.value);
     });
 
-    // 滚动到表单
     document.getElementById('article-form').scrollIntoView({ behavior: 'smooth' });
 
-    // 修改提交按钮
     const submitBtn = document.querySelector('#article-form button[type="submit"]');
     submitBtn.textContent = '更新文章';
-    submitBtn.onclick = (e) => {
-        e.preventDefault();
-        updateArticle();
-    };
 
-    // 添加取消按钮
     let cancelBtn = document.getElementById('cancel-edit-btn');
     if (!cancelBtn) {
         cancelBtn = document.createElement('button');
@@ -483,26 +472,24 @@ function editArticle(id) {
     }
 }
 
-function updateArticle() {
-    const title = document.getElementById('article-title').value.trim();
-    const category = document.getElementById('article-category').value;
-    const excerpt = document.getElementById('article-excerpt').value.trim();
-    const content = document.getElementById('article-content').value.trim();
-
-    const tags = Array.from(document.querySelectorAll('input[name="tags"]:checked'))
-        .map(cb => cb.value);
-
-    if (!title || !category || !excerpt || !content) {
-        alert('请填写所有必填项！');
-        return;
+function updateArticleInEditor(title, category, excerpt, content, tags) {
+    const index = blogManager.articles.findIndex(a => a.id === editingArticleId);
+    if (index !== -1) {
+        blogManager.articles[index] = {
+            ...blogManager.articles[index],
+            title,
+            category,
+            excerpt,
+            content,
+            tags
+        };
+        exportToJson();
     }
-
-    blogManager.updateArticle(editingArticleId, { title, category, excerpt, content, tags });
 
     cancelEdit();
     renderAdminArticles();
 
-    alert('文章更新成功！✨');
+    alert('文章已更新！\n\n请将生成的JSON内容复制到 data/posts.json 文件中并提交到GitHub');
 }
 
 function cancelEdit() {
@@ -510,54 +497,45 @@ function cancelEdit() {
     document.getElementById('article-form').reset();
 
     const submitBtn = document.querySelector('#article-form button[type="submit"]');
-    submitBtn.textContent = '发布文章';
-    submitBtn.onclick = null;
-    submitBtn.addEventListener('submit', (e) => {
-        e.preventDefault();
-        submitArticle();
-    });
+    submitBtn.textContent = '添加文章';
 
     const cancelBtn = document.getElementById('cancel-edit-btn');
     if (cancelBtn) cancelBtn.remove();
 }
 
-// 确认删除
 function confirmDelete(id) {
-    if (confirm('确定要删除这篇文章吗？删除后无法恢复。')) {
-        blogManager.deleteArticle(id);
+    if (confirm('确定要删除这篇文章吗？')) {
+        blogManager.articles = blogManager.articles.filter(a => a.id !== id);
+        exportToJson();
         renderAdminArticles();
-        alert('文章已删除。');
+        alert('文章已删除！请更新 data/posts.json 文件');
     }
 }
 
-// 导出/导入功能
-function exportData() {
-    const data = JSON.stringify(blogManager.articles, null, 2);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `aquavie_blog_backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+// 导出到JSON显示区域
+function exportToJson() {
+    const jsonOutput = document.getElementById('json-output');
+    if (jsonOutput) {
+        jsonOutput.textContent = JSON.stringify(blogManager.articles, null, 2);
+    }
 }
 
-function importData(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data)) {
-                blogManager.articles = data;
-                blogManager.saveArticles(data);
-                renderAdminArticles();
-                alert('导入成功！共导入 ' + data.length + ' 篇文章。');
-            } else {
-                alert('文件格式不正确。');
-            }
-        } catch (err) {
-            alert('文件读取失败：' + err.message);
-        }
-    };
-    reader.readAsText(file);
+// 复制JSON到剪贴板
+function copyJson() {
+    const jsonOutput = document.getElementById('json-output');
+    const copyBtn = document.querySelector('.copy-json-btn');
+    
+    if (!jsonOutput || !copyBtn) return;
+
+    navigator.clipboard.writeText(jsonOutput.textContent).then(() => {
+        copyBtn.textContent = '✓ 已复制';
+        copyBtn.classList.add('copied');
+        
+        setTimeout(() => {
+            copyBtn.textContent = '📋 一键复制';
+            copyBtn.classList.remove('copied');
+        }, 2000);
+    }).catch(err => {
+        alert('复制失败，请手动复制');
+    });
 }
